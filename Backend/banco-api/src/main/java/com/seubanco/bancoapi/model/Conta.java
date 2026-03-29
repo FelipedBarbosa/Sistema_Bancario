@@ -1,28 +1,46 @@
+package com.seubanco.bancoapi.model;
+
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // Requisito da Parte 2
+@DiscriminatorColumn(name = "tipo_conta")
 public abstract class Conta {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id; // O banco precisa de um ID único (Primary Key)
+
     private int numero;
     protected double saldo;
-    private List<String> historico;
+    private String titular; // Adicionado conforme o exemplo do professor
 
-    public Conta(int numero) {
+    @ElementCollection // Forma simples de salvar uma lista de Strings no JPA/SQLite
+    private List<String> historico = new ArrayList<>();
+
+    // OBRIGATÓRIO PARA JPA: Construtor vazio
+    public Conta() {
+    }
+
+    public Conta(int numero, String titular) {
         this.numero = numero;
+        this.titular = titular;
         this.saldo = 0.0;
-        this.historico = new ArrayList<>();
-        registrarOperacao("Conta criada.");
+        registrarOperacao("Conta criada para: " + titular);
     }
 
-    public int getNumero() {
-        return numero;
-    }
+    // Getters e Setters
+    public Long getId() { return id; }
+    public int getNumero() { return numero; }
+    public double getSaldo() { return saldo; }
+    public String getTitular() { return titular; }
+    public void setTitular(String titular) { this.titular = titular; }
 
-    public double getSaldo() {
-        return saldo;
-    }
-
+    // Suas regras de negócio (sacar, depositar, transferir) continuam iguais!
     protected void registrarOperacao(String operacao) {
-        historico.add(operacao);
+        this.historico.add(operacao);
     }
 
     public void depositar(double valor) {
@@ -41,33 +59,14 @@ public abstract class Conta {
         return false;
     }
 
-    public boolean transferir(Conta destino, double valor) {
-        if (valor > 0 && saldo >= valor) {
-            this.saldo -= valor;
-            destino.depositarTransferencia(valor);
-
-            this.registrarOperacao("Transferência enviada: -R$ " + valor + " para Conta " + destino.getNumero());
-            destino.registrarOperacao("Transferência recebida: +R$ " + valor + " da Conta " + this.getNumero());
-
-            return true;
-        }
-        return false;
-    }
-
-    protected void depositarTransferencia(double valor) {
-        saldo += valor;
-    }
-
-    public void exibirHistorico() {
-        System.out.println("\n--- Histórico da Conta " + numero + " ---");
-        for (String op : historico) {
-            System.out.println("- " + op);
-        }
-        System.out.println("------------------------------");
+    // Na Parte 5 (Service), vamos mover a lógica de transferência para lá,
+    // mas por enquanto pode manter aqui para não quebrar seu código.
+    public void depositarTransferencia(double valor) {
+        this.saldo += valor;
     }
 
     @Override
     public String toString() {
-        return "Conta: " + numero + " | Saldo: R$ " + saldo;
+        return "Conta: " + numero + " | Titular: " + titular + " | Saldo: R$ " + saldo;
     }
 }
