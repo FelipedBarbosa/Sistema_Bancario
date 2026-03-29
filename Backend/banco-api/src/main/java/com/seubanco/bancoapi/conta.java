@@ -1,47 +1,73 @@
-package com.seubanco.bancoapi.model;
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.*;
-
-@Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "tipo_conta")
 public abstract class Conta {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     private int numero;
-    private String titular;
-    private double saldo;
+    protected double saldo;
+    private List<String> historico;
 
-    // getters e setters
-
-    public Long getId() {
-        return id;
+    public Conta(int numero) {
+        this.numero = numero;
+        this.saldo = 0.0;
+        this.historico = new ArrayList<>();
+        registrarOperacao("Conta criada.");
     }
 
     public int getNumero() {
         return numero;
     }
 
-    public void setNumero(int numero) {
-        this.numero = numero;
-    }
-
-    public String getTitular() {
-        return titular;
-    }
-
-    public void setTitular(String titular) {
-        this.titular = titular;
-    }
-
     public double getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(double saldo) {
-        this.saldo = saldo;
+    protected void registrarOperacao(String operacao) {
+        historico.add(operacao);
+    }
+
+    public void depositar(double valor) {
+        if (valor > 0) {
+            saldo += valor;
+            registrarOperacao("Depósito: +R$ " + valor);
+        }
+    }
+
+    public boolean sacar(double valor) {
+        if (valor > 0 && saldo >= valor) {
+            saldo -= valor;
+            registrarOperacao("Saque: -R$ " + valor);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean transferir(Conta destino, double valor) {
+        if (valor > 0 && saldo >= valor) {
+            this.saldo -= valor;
+            destino.depositarTransferencia(valor);
+
+            this.registrarOperacao("Transferência enviada: -R$ " + valor + " para Conta " + destino.getNumero());
+            destino.registrarOperacao("Transferência recebida: +R$ " + valor + " da Conta " + this.getNumero());
+
+            return true;
+        }
+        return false;
+    }
+
+    protected void depositarTransferencia(double valor) {
+        saldo += valor;
+    }
+
+    public void exibirHistorico() {
+        System.out.println("\n--- Histórico da Conta " + numero + " ---");
+        for (String op : historico) {
+            System.out.println("- " + op);
+        }
+        System.out.println("------------------------------");
+    }
+
+    @Override
+    public String toString() {
+        return "Conta: " + numero + " | Saldo: R$ " + saldo;
     }
 }
