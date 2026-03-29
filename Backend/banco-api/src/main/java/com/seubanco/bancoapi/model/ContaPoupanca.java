@@ -1,5 +1,4 @@
 package com.seubanco.bancoapi.model;
-
 import jakarta.persistence.Entity;
 
 @Entity
