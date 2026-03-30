@@ -52,4 +52,15 @@ public class ContaService {
         }
         return false;
     }
+
+    public double calcularTotalTributos() {
+        return repository.findAll().stream()
+                .filter(c -> c instanceof com.seubanco.bancoapi.model.Tributavel)
+                .mapToDouble(c -> ((com.seubanco.bancoapi.model.Tributavel) c).getValorImposto())
+                .sum();
+    }
+
+
+
+
 }
